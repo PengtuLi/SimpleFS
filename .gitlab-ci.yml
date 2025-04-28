@@ -1,0 +1,4 @@
+image: pbui/cse-30341-fa19-project06
+test:
+  script:
+    - make test
