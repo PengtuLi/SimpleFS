@@ -35,7 +35,7 @@ bool copyin(FileSystem *fs, const char *path, size_t inode_number);
 int main(int argc, char *argv[]) {
     if (argc != 3) {
 	fprintf(stderr, "Usage: %s <diskfile> <nblocks>\n", argv[0]);
-	return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     Disk *disk = disk_open(argv[1], atoi(argv[2]));
