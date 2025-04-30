@@ -1,0 +1,89 @@
+
+file0.txt:
+	echo "foo" > file0.txt
+	# 
+	# comment
+	# comment
+	@echo "echo foo to file0.txt"
+
+file1.txt:file0.txt
+	cat file0.txt > file1.txt
+
+file2.txt file3.txt:file0.txt file1.txt
+	touch file2.txt
+	touch file3.txt
+
+# file2.txt :file0.txt
+# 	echo "use override target command"
+
+
+# phony target
+# exec each time, the same for the one rely on
+# exp: if we set file1.txt as phony target
+#      then the file2.txt and file3.txt will be execed
+#      even it has already existed.
+
+# .PHONY: file1.txt
+
+all:process
+	@echo "exec target all scripts"
+
+process_pre=file1.txt file3.txt file0.txt file2.txt
+process:${process_pre}
+	@echo $@ # target
+	@echo $^ # prerequisite
+	@echo $<
+	@echo $?
+
+clean:
+	rm file*
+
+# match mode
+
+# md to markdown
+%.markdown:%.md
+	@echo "start convert"
+	cp $^ $@
+
+# var are all string type
+name=john
+name1='john1'
+name2="john2"
+name2?=john3
+name3=${name1}+${name2}
+
+name4=${no}          name4
+
+name:
+	echo $(name)
+	echo $(name1)
+	echo $(name2)
+	echo $(PWD)
+	echo ${PWD}
+	echo ${name3}
+	echo ${name4}
+
+# function
+#
+# wildcard, $() is way to call method in makefile
+wd:
+	@echo $(wildcard *.txt)
+	@echo wildcard *.txt %.txt
+
+sub:*
+	@echo $(patsubst %.txtt, %.txt, $* $^)
+
+ls:*
+	@echo $(filter %.txt, $^)
+	@echo $(notdir $^)
+	@echo $(join $(dir $^),$(notdir $^))
+
+# control flow
+#
+var=ball
+fun:
+ifeq ($(var),ball)
+	@echo ball
+else
+	@echo no ball
+endif
