@@ -4,6 +4,7 @@
 #include "sfs/logging.h"
 
 #include <fcntl.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 /* Internal Prototyes */
@@ -65,6 +66,18 @@ void	disk_close(Disk *disk) {
  *              (BLOCK_SIZE on success, DISK_FAILURE on failure).
  **/
 ssize_t disk_read(Disk *disk, size_t block, char *data) {
+    // sanity check
+    if (!disk_sanity_check(disk, block, data))return DISK_FAILURE;
+
+    // to specified block
+    
+
+    // read from block
+    
+
+
+    disk->reads++;
+
     return DISK_FAILURE;
 }
 
@@ -90,13 +103,7 @@ ssize_t disk_write(Disk *disk, size_t block, char *data) {
 }
 
 /* Internal Functions */
-
-/**
- * Perform sanity check before read or write operation:
- *
- *  1. Check for valid disk.
- *
- *  2. Check for valid block.
+/** Perform sanity check before read or write operation: 1. Check for valid disk. 2. Check for valid block.
  *
  *  3. Check for valid data.
  *
@@ -108,7 +115,22 @@ ssize_t disk_write(Disk *disk, size_t block, char *data) {
  *              (true for safe, false for unsafe).
  **/
 bool    disk_sanity_check(Disk *disk, size_t block, const char *data) {
-    return false;
-}
+    // check disk
+    if (NULL==disk) {
+        return false;
+    }
+    if (disk->fd==-1) {
+        return false;
+    }
+    // check for block
+    if (block>=disk->blocks) {
+        return false;
+    }
+    // check for data buffer
+    if (data==NULL) {
+        return false;
+    }
+    return true; 
+} 
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

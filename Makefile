@@ -2,10 +2,15 @@
 
 CC		= gcc
 LD		= gcc
+# ar (archiver) 作为创建静态库 (.a 文件) 的工具
 AR		= ar
-CFLAGS		= -g -std=gnu99 -Wall -Iinclude -fPIC
+# 位置无关代码
+CFLAGS		= -g -std=gnu99 -Wall -Iinclude -fPIC 
+# lib file location
 LDFLAGS		= -Llib
+# default lib math
 LIBS		= -lm
+# replace/create if not exist/create index
 ARFLAGS		= rcs
 
 # Variables
@@ -21,7 +26,8 @@ SFS_SHELL	= bin/sfssh
 
 SFS_TEST_SRCS   = $(wildcard src/tests/*.c)
 SFS_TEST_OBJS   = $(SFS_TEST_SRCS:.c=.o)
-SFS_UNIT_TESTS	= $(patsubst src/tests/%,bin/%,$(patsubst %.c,%,$(wildcard src/tests/unit_*.c)))
+# SFS_UNIT_TESTS	= $(patsubst src/tests/%,bin/%,$(patsubst %.c,%,$(wildcard src/tests/unit_*.c)))
+SFS_UNIT_TESTS	= $(patsubst src/tests/%.c,bin/%,$(wildcard src/tests/unit_*.c))
 
 # Rules
 
