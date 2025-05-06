@@ -1,5 +1,4 @@
 bin/unit_*
-bin/test_*
 bin/sfssh
 data/image.unit
 lib/lib*.a

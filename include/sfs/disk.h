@@ -4,6 +4,7 @@
 #define DISK_H
 
 #include <stdbool.h>
+#include <sys/types.h>
 #include <stdlib.h>
 
 /* Disk Constants */
