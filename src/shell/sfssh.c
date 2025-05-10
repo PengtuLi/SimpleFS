@@ -2,6 +2,7 @@
 
 #include "sfs/disk.h"
 #include "sfs/fs.h"
+#include "sfs/logging.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -40,8 +41,10 @@ int main(int argc, char *argv[]) {
 
     Disk *disk = disk_open(argv[1], atoi(argv[2]));
     if (!disk) {
+        error("disk open fail");
     	return EXIT_FAILURE;
     }
+    debug("disk success open");
 
     FileSystem fs = {0};
     while (true) {

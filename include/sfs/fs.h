@@ -64,6 +64,13 @@ ssize_t fs_stat(FileSystem *fs, size_t inode_number);
 ssize_t fs_read(FileSystem *fs, size_t inode_number, char *data, size_t length, size_t offset);
 ssize_t fs_write(FileSystem *fs, size_t inode_number, char *data, size_t length, size_t offset);
 
+/* Inode Functions */
+bool is_valid_Inode(Inode *inode);
+uint32_t *direct_pointer(Inode *inode);
+uint32_t *indirect_pointer(Disk *disk, Inode *inode);
+uint32_t direct_pointer_num(Inode *inode);
+uint32_t indirect_pointer_num(uint32_t *pointers);
+
 #endif
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

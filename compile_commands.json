@@ -12,9 +12,9 @@
       "src/library/disk.o",
       "src/library/disk.c"
     ],
-    "directory": "/home/lpt/Desktop/SimpleFS",
-    "file": "/home/lpt/Desktop/SimpleFS/src/library/disk.c",
-    "output": "/home/lpt/Desktop/SimpleFS/src/library/disk.o"
+    "directory": "/Users/tutu/Desktop/SimpleFS",
+    "file": "/Users/tutu/Desktop/SimpleFS/src/library/disk.c",
+    "output": "/Users/tutu/Desktop/SimpleFS/src/library/disk.o"
   },
   {
     "arguments": [
@@ -29,9 +29,9 @@
       "src/library/fs.o",
       "src/library/fs.c"
     ],
-    "directory": "/home/lpt/Desktop/SimpleFS",
-    "file": "/home/lpt/Desktop/SimpleFS/src/library/fs.c",
-    "output": "/home/lpt/Desktop/SimpleFS/src/library/fs.o"
+    "directory": "/Users/tutu/Desktop/SimpleFS",
+    "file": "/Users/tutu/Desktop/SimpleFS/src/library/fs.c",
+    "output": "/Users/tutu/Desktop/SimpleFS/src/library/fs.o"
   },
   {
     "arguments": [
@@ -46,9 +46,9 @@
       "src/tests/unit_disk.o",
       "src/tests/unit_disk.c"
     ],
-    "directory": "/home/lpt/Desktop/SimpleFS",
-    "file": "/home/lpt/Desktop/SimpleFS/src/tests/unit_disk.c",
-    "output": "/home/lpt/Desktop/SimpleFS/src/tests/unit_disk.o"
+    "directory": "/Users/tutu/Desktop/SimpleFS",
+    "file": "/Users/tutu/Desktop/SimpleFS/src/tests/unit_disk.c",
+    "output": "/Users/tutu/Desktop/SimpleFS/src/tests/unit_disk.o"
   },
   {
     "arguments": [
@@ -63,9 +63,9 @@
       "src/tests/unit_fs.o",
       "src/tests/unit_fs.c"
     ],
-    "directory": "/home/lpt/Desktop/SimpleFS",
-    "file": "/home/lpt/Desktop/SimpleFS/src/tests/unit_fs.c",
-    "output": "/home/lpt/Desktop/SimpleFS/src/tests/unit_fs.o"
+    "directory": "/Users/tutu/Desktop/SimpleFS",
+    "file": "/Users/tutu/Desktop/SimpleFS/src/tests/unit_fs.c",
+    "output": "/Users/tutu/Desktop/SimpleFS/src/tests/unit_fs.o"
   },
   {
     "arguments": [
@@ -80,8 +80,8 @@
       "src/shell/sfssh.o",
       "src/shell/sfssh.c"
     ],
-    "directory": "/home/lpt/Desktop/SimpleFS",
-    "file": "/home/lpt/Desktop/SimpleFS/src/shell/sfssh.c",
-    "output": "/home/lpt/Desktop/SimpleFS/src/shell/sfssh.o"
+    "directory": "/Users/tutu/Desktop/SimpleFS",
+    "file": "/Users/tutu/Desktop/SimpleFS/src/shell/sfssh.c",
+    "output": "/Users/tutu/Desktop/SimpleFS/src/shell/sfssh.o"
   }
 ]

@@ -13,6 +13,11 @@ LIBS		= -lm
 # replace/create if not exist/create index
 ARFLAGS		= rcs
 
+# print log
+ifndef DEBUG_LOG
+	CFLAGS += -DNDEBUG
+endif
+
 # Variables
 
 SFS_LIB_HDRS	= $(wildcard include/sfs/*.h)

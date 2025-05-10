@@ -1,10 +1,14 @@
 /* fs.c: SimpleFS file system */
 
 #include "sfs/fs.h"
+#include "sfs/disk.h"
 #include "sfs/logging.h"
 #include "sfs/utils.h"
 
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* External Functions */
@@ -23,15 +27,64 @@ void    fs_debug(Disk *disk) {
 
     /* Read SuperBlock */
     if (disk_read(disk, 0, block.data) == DISK_FAILURE) {
-        return;
+        error("error read super");
+        exit(-1);
+    }
+    if (block.super.magic_number!=MAGIC_NUMBER) {
+        error("magic number not right");
+        exit(-1);
     }
 
+    debug("read super block success");
+
     printf("SuperBlock:\n");
+    printf("    magic number is valid\n");
     printf("    %u blocks\n"         , block.super.blocks);
     printf("    %u inode blocks\n"   , block.super.inode_blocks);
     printf("    %u inodes\n"         , block.super.inodes);
 
     /* Read Inodes */
+
+    for (unsigned int i=0; i<block.super.inode_blocks; i++) {
+        Block inode_block;
+        disk_read(disk, i+1, inode_block.data);
+        for (int idx_inode=0; idx_inode<INODES_PER_BLOCK; idx_inode++) {
+            Inode inode = inode_block.inodes[idx_inode];
+            if (is_valid_Inode(&inode)) {
+                printf("Inode %u:\n", i*INODES_PER_BLOCK+idx_inode);
+                printf("    size: %u bytes\n", inode.size);
+
+                // direct
+                uint32_t *dir_p = direct_pointer(&inode);
+                printf("    direct blocks:");
+                for (int i = 0; i < POINTERS_PER_INODE; i++) {
+                    if (dir_p[i] != 0) {
+                        printf(" %u", dir_p[i]);
+                    }
+                }
+                printf("\n");
+                free(dir_p);
+
+                // indirect
+                if (inode.indirect!=0) {
+                    uint32_t *indir_p = indirect_pointer(disk, &inode);
+                    printf("    indirect block: %u\n", inode.indirect);
+                    printf("    indirect data blocks:");
+                    for (int i = 0; i < POINTERS_PER_BLOCK; i++) {
+                        if (indir_p[i] != 0) {
+                            printf(" %u", indir_p[i]);
+                        }
+                    }
+                    printf("\n");
+                    free(indir_p);
+
+                }
+            }
+        }
+    }
+
+    printf("%lu disk block reads\n%lu disk block writes\n",disk->reads,disk->writes);
+
 }
 
 /**
@@ -171,6 +224,47 @@ ssize_t fs_read(FileSystem *fs, size_t inode_number, char *data, size_t length, 
  **/
 ssize_t fs_write(FileSystem *fs, size_t inode_number, char *data, size_t length, size_t offset) {
     return -1;
+}
+
+bool is_valid_Inode(Inode *inode){
+    return inode->valid==1;
+}
+
+uint32_t direct_pointer_num(Inode *inode){
+    int direct_p_num = 0;
+    for (int i=0; i<POINTERS_PER_INODE;i++) {
+        if (inode->direct[i]!=0) {
+            direct_p_num++;
+        }
+    }
+    return direct_p_num;
+}
+
+uint32_t *direct_pointer(Inode *inode){
+    uint32_t *dir_p = malloc(sizeof(uint32_t)*POINTERS_PER_INODE);
+    for (int i=0; i<POINTERS_PER_INODE;i++) {
+        if (inode->direct[i]!=0) {
+            dir_p[i]=inode->direct[i];
+        }
+    }
+    return dir_p;
+}
+
+uint32_t *indirect_pointer(Disk * disk, Inode *inode){
+    if (inode->indirect==0) return NULL;
+    Block *block = malloc(sizeof(Block));
+    disk_read(disk, inode->indirect, block->data);
+    return block->pointers;
+}
+
+uint32_t indirect_pointer_num(uint32_t *pointers){
+    uint32_t indir_p_num = 0;
+    for (uint32_t i=0; i<POINTERS_PER_BLOCK; i++) {
+        if (pointers[i]!=0) {
+            indir_p_num++;
+        }
+    }
+    return indir_p_num;
 }
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

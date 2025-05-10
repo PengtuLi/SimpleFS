@@ -12,7 +12,7 @@
 
 #ifndef NDEBUG
 #define debug(M, ...) \
-    fprintf(stderr, "DEBUG %s:%d:%s: " M "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
+    fprintf(stderr, "\033[31mDEBUG %s:%d:%s:\033[0m " M "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 #else
 #define debug(M, ...)
 #endif
