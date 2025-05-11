@@ -3,6 +3,7 @@
 #include "sfs/fs.h"
 #include "sfs/disk.h"
 #include "sfs/logging.h"
+#include "math.h"
 #include "sfs/utils.h"
 
 #include <stddef.h>
@@ -102,7 +103,35 @@ void    fs_debug(Disk *disk) {
  * @return      Whether or not all disk operations were successful.
  **/
 bool    fs_format(FileSystem *fs, Disk *disk) {
-    return false;
+    // if mounted disk, not do format
+    if (fs->free_blocks || fs->disk) {
+        error("disk mounted, format failed!");
+    }
+
+    // write superblock
+    Block block;
+    block.super.magic_number=MAGIC_NUMBER;
+    block.super.blocks=disk->blocks;
+    block.super.inode_blocks=(uint32_t)ceil(disk->blocks/10.0);
+    block.super.inodes=block.super.inode_blocks*BLOCK_SIZE/32;
+    debug("format-superblock-block-inode_block %ud %ud\n",block.super.blocks,block.super.inode_blocks);
+
+    if (disk_write(disk, 0, block.data)==DISK_FAILURE){
+        error("format disk wirte super block failed");
+        return false;
+    }
+
+    // clear remaining block
+    char *empty_block_data=malloc(BLOCK_SIZE);
+    for (int i=1; i<block.super.blocks; i++) {
+        if (disk_write(disk, i, empty_block_data)==DISK_FAILURE){
+            error("format disk wirte block %d failed", i);
+            return false;
+        }
+    }
+    free(empty_block_data);
+
+    return true;
 }
 
 /**

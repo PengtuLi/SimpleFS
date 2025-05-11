@@ -146,7 +146,24 @@ ssize_t disk_read(Disk *disk, size_t block, char *data) {
  *              (BLOCK_SIZE on success, DISK_FAILURE on failure).
  **/
 ssize_t disk_write(Disk *disk, size_t block, char *data) {
-    return DISK_FAILURE;
+    // sanity check
+    if (!disk_sanity_check(disk, block, data)){
+        error("check disk sanity fail");
+        return DISK_FAILURE;
+    }
+
+    // seek off
+    off_t loc = block*BLOCK_SIZE;
+
+    // write
+    if (pwrite(disk->fd, data, BLOCK_SIZE, loc)<0) {
+        error("error write to disk, block %zu off_t %llu",block,loc);
+        return DISK_FAILURE;
+    }
+
+    disk->writes++;
+
+    return BLOCK_SIZE;
 }
 
 /* Internal Functions */
