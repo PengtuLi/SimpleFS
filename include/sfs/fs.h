@@ -70,6 +70,9 @@ uint32_t *direct_pointer(Inode *inode);
 uint32_t *indirect_pointer(Disk *disk, Inode *inode);
 uint32_t direct_pointer_num(Inode *inode);
 uint32_t indirect_pointer_num(uint32_t *pointers);
+bool init_bit_map(FileSystem *fs);
+void *free_block_of_inode(Disk *disk, Inode *inode, bool *block_map);
+bool busy_block_of_disk(FileSystem *fs, bool *block_map);
 
 #endif
 

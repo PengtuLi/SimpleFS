@@ -6,6 +6,7 @@
 
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -92,6 +93,17 @@ Disk *	disk_open(const char *path, size_t blocks) {
  * @param       disk        Pointer to Disk structure.
  */
 void	disk_close(Disk *disk) {
+    // close fd
+    if (close(disk->fd)==-1){
+        error("release fd fail.");
+    }
+
+    // report
+    printf("%zu disk block reads\n",disk->reads);
+    printf("%zu disk block writes\n",disk->writes);
+
+    // realease
+    free(disk);
 }
 
 /**

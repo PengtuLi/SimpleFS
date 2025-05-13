@@ -86,4 +86,7 @@ clean:
 	@echo "Removing  tests"
 	@rm -f $(SFS_UNIT_TESTS) test.log
 
+	@echo "recover data/diskfile."
+	git restore --source=35d2ea2e02ee5f66e9469054721a848842c49c87 data/image*
+
 .PRECIOUS: %.o

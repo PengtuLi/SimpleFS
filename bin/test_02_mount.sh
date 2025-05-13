@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 mount-input() {
     cat <<EOF
 mount
@@ -83,19 +81,6 @@ EOF
 }
 
 EXIT=0
-
-echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x10 0x34 0xf1 0xf0) >  $SCRATCH/image.5
-echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x05 0x00 0x00 0x00) >> $SCRATCH/image.5
-echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x01 0x00 0x00 0x00) >> $SCRATCH/image.5
-echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x80 0x00 0x00 0x00) >> $SCRATCH/image.5
-echo -n "Testing bad-mount on $SCRATCH/image.5 ... "
-if diff -u <(bad-mount-input| ./bin/sfssh $SCRATCH/image.5 5 2> /dev/null) <(bad-mount-output) > $SCRATCH/test.log; then
-    echo "Success"
-else
-    echo "Failure"
-    cat $SCRATCH/test.log
-    EXIT=$(($EXIT + 1))
-fi
 
 echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x10 0x34 0xf1 0xf0) >  $SCRATCH/image.5
 echo -n -e $(printf '\\x%x\\x%x\\x%x\\x%x' 0x05 0x00 0x00 0x00) >> $SCRATCH/image.5

@@ -6,6 +6,7 @@
 #include "math.h"
 #include "sfs/utils.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -84,7 +85,6 @@ void    fs_debug(Disk *disk) {
         }
     }
 
-    printf("%lu disk block reads\n%lu disk block writes\n",disk->reads,disk->writes);
 
 }
 
@@ -104,8 +104,9 @@ void    fs_debug(Disk *disk) {
  **/
 bool    fs_format(FileSystem *fs, Disk *disk) {
     // if mounted disk, not do format
-    if (fs->free_blocks || fs->disk) {
+    if (fs->disk==disk) {
         error("disk mounted, format failed!");
+        return false;
     }
 
     // write superblock
@@ -152,7 +153,47 @@ bool    fs_format(FileSystem *fs, Disk *disk) {
  * @return      Whether or not the mount operation was successful.
  **/
 bool    fs_mount(FileSystem *fs, Disk *disk) {
-    return false;
+    // check if already mounted
+    if (fs->disk==disk) {
+        error("disk already mounted.");
+        return false;
+    }
+
+    // check super block
+    Block block;
+    if (disk_read(disk, 0, block.data)==DISK_FAILURE) {
+        error("read super block error");
+        return false;
+    }
+    if (block.super.magic_number!=MAGIC_NUMBER) {
+        error("magic number invalid, mount fail.");
+        return false;
+    }
+    if (block.super.blocks!=disk->blocks) {
+        error("block number invalid, mount fail.");
+        return false;
+    }
+    if (block.super.inode_blocks!=ceil(disk->blocks/10.0)) {
+        error("inode block number invalid, mount fail.");
+        return false;
+    }
+    if (block.super.inodes!=block.super.inode_blocks*INODES_PER_BLOCK) {
+        error("inode number invalid, mount fail.");
+        return false;
+    }
+
+    // copy attribute
+    fs->meta_data=block.super;
+    fs->disk=disk;
+
+    // init bitmap
+    if (!init_bit_map(fs)) {
+        error("init bitmap failed");
+        fs->disk=NULL;
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -165,6 +206,9 @@ bool    fs_mount(FileSystem *fs, Disk *disk) {
  * @param       fs      Pointer to FileSystem structure.
  **/
 void    fs_unmount(FileSystem *fs) {
+    free(fs->free_blocks);
+    fs->free_blocks=NULL;
+    fs->disk=NULL;
 }
 
 /**
@@ -295,5 +339,62 @@ uint32_t indirect_pointer_num(uint32_t *pointers){
     }
     return indir_p_num;
 }
+
+void *free_block_of_inode(Disk *disk, Inode *inode, bool *block_map){
+    uint32_t *dir_p = direct_pointer(inode);
+    uint32_t *indir_p = indirect_pointer(disk, inode);
+    
+    for (int i=0; i<POINTERS_PER_INODE; i++) {
+        if (dir_p[i]!=0) {
+            block_map[dir_p[i]]=1;
+        }
+    }
+
+    if (indir_p!=NULL) {
+        for (int i=0; i<POINTERS_PER_BLOCK; i++) {
+            if (indir_p[i]!=0) {
+                block_map[indir_p[i]]=1;
+            }
+        }
+    }
+
+    free(dir_p);
+    free(indir_p);
+
+    return 0;
+}
+
+bool busy_block_of_disk(FileSystem *fs, bool *block_map){
+    block_map[0]=1;// super block
+    // check used block
+    Block block;
+    for (int i=1; i<=fs->meta_data.inode_blocks; i++) {
+        if(disk_read(fs->disk, i, block.data)==DISK_FAILURE){
+            error("read disk failure in init bit map");
+            return false;
+        }
+
+        for (int j=0; j<INODES_PER_BLOCK; j++) {
+
+            Inode inode = block.inodes[j];
+
+            if(is_valid_Inode(&inode)) {
+                free_block_of_inode(fs->disk, &inode, block_map);
+            }
+        }
+    }
+
+    return true;
+}
+
+bool init_bit_map(FileSystem *fs){
+    uint32_t bn = fs->meta_data.blocks;
+    fs->free_blocks=malloc(bn*sizeof(bool));
+    if (!busy_block_of_disk(fs, fs->free_blocks)) {
+        return false;
+    }
+    return true;
+}
+
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */
