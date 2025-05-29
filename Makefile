@@ -5,7 +5,7 @@ LD		= gcc
 # ar (archiver) 作为创建静态库 (.a 文件) 的工具
 AR		= ar
 # 位置无关代码
-CFLAGS		= -g -std=gnu99 -Wall -Iinclude -fPIC 
+CFLAGS		= -g -std=gnu99 -Wall -Iinclude -fPIC
 # lib file location
 LDFLAGS		= -Llib
 # default lib math

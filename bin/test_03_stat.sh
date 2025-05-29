@@ -67,11 +67,11 @@ test-stat() {
 
     echo -n "Testing stat on data/image.$BLOCKS ... "
     if diff -u <(image-$BLOCKS-input | ./bin/sfssh data/image.$BLOCKS $BLOCKS 2> /dev/null) <(image-$BLOCKS-output) > test.log; then
-    	echo "Success"
+        echo "Success"
     else
-    	echo "Failure"
-    	cat test.log
-	EXIT=$(($EXIT + 1))
+        echo "Failure"
+        cat test.log
+        EXIT=$(($EXIT + 1))
     fi
     rm -f test.log
 }

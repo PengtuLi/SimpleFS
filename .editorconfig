@@ -1,0 +1,25 @@
+# Check http://editorconfig.org for more information
+# This is the main config file for project:
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+max_line_length = 80
+# set to true to remove any whitespace characters preceding newline characters
+trim_trailing_whitespace = true
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+insert_final_newline = true
+# set tab as space * indent)size
+indent_style = space
+indent_size = 2
+
+[*.{py,c,h,cpp}]
+indent_size = 4
+
+# Tab indentation (no size specified)
+[Makefile]
+indent_style = tab
+
