@@ -231,6 +231,11 @@ ssize_t fs_create(FileSystem *fs) {
       if (!is_valid_Inode(&block.inodes[j])) {
         // save to disk
         block.inodes[j].valid = 1;
+        for (uint32_t k = 0; k < POINTERS_PER_INODE; k++) {
+          block.inodes[j].direct[k] = 0;
+        }
+        block.inodes[j].indirect = 0;
+        block.inodes[j].size = 0;
         disk_write(fs->disk, i, block.data);
         // update bitmap
         init_bit_map(fs);
@@ -270,7 +275,44 @@ ssize_t fs_create(FileSystem *fs) {
  * @param       inode_number    Inode to remove.
  * @return      Whether or not removing the specified Inode was successful.
  **/
-bool fs_remove(FileSystem *fs, size_t inode_number) { return false; }
+bool fs_remove(FileSystem *fs, size_t inode_number) {
+
+  // check inode metadata
+  Block block;
+  disk_read(fs->disk, inode_number / INODES_PER_BLOCK + 1, block.data);
+  Inode inode = block.inodes[inode_number % INODES_PER_BLOCK];
+  if (!is_valid_Inode(&inode)) {
+    error("not valid inode.");
+    return false;
+  }
+
+  // release dir point
+  for (uint32_t dir_idx = 0; dir_idx < POINTERS_PER_INODE; dir_idx++) {
+    if (inode.direct[dir_idx]) {
+      fs->free_blocks[inode.direct[dir_idx]] = 0;
+    }
+  }
+  // release indir point
+  if (inode.indirect) {
+    fs->free_blocks[inode.indirect] = 0;
+    Block point_block;
+    disk_read(fs->disk, inode.indirect, point_block.data);
+    for (uint32_t pt_idx = 0; pt_idx < POINTERS_PER_BLOCK; pt_idx++) {
+      if (point_block.pointers[pt_idx]) {
+        fs->free_blocks[point_block.pointers[pt_idx]] = 0;
+      } else {
+        break;
+      }
+    }
+  }
+
+  // release inode
+  inode.valid = 0;
+  block.inodes[inode_number % INODES_PER_BLOCK] = inode;
+  disk_write(fs->disk, inode_number / INODES_PER_BLOCK + 1, block.data);
+
+  return true;
+}
 
 /**
  * Return size of specified Inode.
@@ -308,7 +350,37 @@ ssize_t fs_stat(FileSystem *fs, size_t inode_number) {
  **/
 ssize_t fs_read(FileSystem *fs, size_t inode_number, char *data, size_t length,
                 size_t offset) {
-  return -1;
+  Block block;
+  disk_read(fs->disk, inode_number / INODES_PER_BLOCK + 1, block.data);
+  Inode inode = block.inodes[inode_number % INODES_PER_BLOCK];
+  uint32_t size = inode.size;
+  // if unvalid inode
+  if (!is_valid_Inode(&inode)) {
+    return -1;
+  }
+  // read form dir pt
+  if (offset >= size) {
+    return -1;
+  }
+
+  int pt_idx = offset / BLOCK_SIZE;
+  uint32_t block_idx;
+
+  if (pt_idx < POINTERS_PER_INODE) {
+    block_idx = inode.direct[pt_idx];
+  } else {
+    uint32_t indir_idx = (pt_idx - POINTERS_PER_INODE) % POINTERS_PER_BLOCK;
+    Block indir_block;
+    disk_read(fs->disk, inode.indirect, indir_block.data);
+    block_idx = indir_block.pointers[indir_idx];
+  }
+
+  char *buf = malloc(BLOCK_SIZE);
+  disk_read(fs->disk, block_idx, buf);
+  memcpy(data, buf, min(size - offset, BLOCK_SIZE));
+
+  free(buf);
+  return offset + length <= size ? length : size - offset;
 }
 
 /**
@@ -330,7 +402,69 @@ ssize_t fs_read(FileSystem *fs, size_t inode_number, char *data, size_t length,
  **/
 ssize_t fs_write(FileSystem *fs, size_t inode_number, char *data, size_t length,
                  size_t offset) {
-  return -1;
+  Block block;
+  disk_read(fs->disk, inode_number / INODES_PER_BLOCK + 1, block.data);
+  Inode inode = block.inodes[inode_number % INODES_PER_BLOCK];
+  if (!is_valid_Inode(&inode)) {
+    return -1;
+  }
+
+  uint32_t pt_idx = offset / BLOCK_SIZE;
+  if (pt_idx >= POINTERS_PER_INODE + POINTERS_PER_BLOCK) {
+    return -1;
+  }
+
+  // malloc free block
+  uint32_t bk_idx = assign_block(fs);
+  if (bk_idx == -1) {
+    return -1;
+  }
+  char *buf = malloc(BLOCK_SIZE);
+  memcpy(buf, data, length);
+  ssize_t result = disk_write(fs->disk, bk_idx, data);
+  free(buf);
+
+  // change pointer metadata in inode
+  if (pt_idx < POINTERS_PER_INODE) {
+    // dir pointer
+    inode.direct[pt_idx] = bk_idx;
+  } else {
+    // malloc indir block
+    uint32_t indir_pt_bk_idx;
+    if (!inode.indirect) {
+      indir_pt_bk_idx = assign_block(fs);
+      if (indir_pt_bk_idx == -1) {
+        unassign_block(fs, bk_idx);
+        return -1;
+      }
+      inode.indirect = indir_pt_bk_idx;
+    } else {
+      indir_pt_bk_idx = inode.indirect;
+    }
+
+    Block point_block;
+    disk_read(fs->disk, indir_pt_bk_idx, point_block.data);
+    uint32_t i = 0;
+    for (; i < POINTERS_PER_BLOCK; i++) {
+      if (point_block.pointers[i] == 0) {
+        point_block.pointers[i] = bk_idx;
+        break;
+      }
+    }
+
+    if (i >= POINTERS_PER_BLOCK) {
+      error("reach to max inode size.");
+      return -1;
+    }
+
+    disk_write(fs->disk, indir_pt_bk_idx, point_block.data);
+  }
+
+  // change inode metadata
+  inode.size += length;
+  block.inodes[inode_number % INODES_PER_BLOCK] = inode;
+  disk_write(fs->disk, inode_number / INODES_PER_BLOCK + 1, block.data);
+  return length;
 }
 
 bool is_valid_Inode(Inode *inode) { return inode->valid == 1; }
@@ -389,6 +523,7 @@ void *free_block_of_inode(Disk *disk, Inode *inode, bool *block_map) {
         block_map[indir_p[i]] = 1;
       }
     }
+    block_map[inode->indirect] = 1;
   }
 
   free(dir_p);
@@ -425,5 +560,37 @@ bool init_bit_map(FileSystem *fs) {
   if (!busy_block_of_disk(fs, fs->free_blocks)) {
     return false;
   }
+  // inode block set to busy
+  for (uint32_t i = 1; i <= fs->meta_data.inode_blocks; i++) {
+    fs->free_blocks[i] = 1;
+  }
   return true;
+}
+
+uint32_t assign_block(FileSystem *fs) {
+  for (uint32_t i = 0; i < fs->meta_data.blocks; i++) {
+    if (!fs->free_blocks[i]) {
+      fs->free_blocks[i] = 1;
+
+      // clean block
+      Block block;
+      for (uint32_t j = 0; j < POINTERS_PER_BLOCK; j++) {
+        block.pointers[j] = 0;
+      }
+
+      disk_write(fs->disk, i, block.data);
+      return i;
+    }
+  }
+
+  error("malloc block fail.");
+  return -1;
+}
+
+uint32_t unassign_block(FileSystem *fs, uint32_t bid) {
+  if (fs->free_blocks[bid]) {
+    fs->free_blocks[bid] = 0;
+  }
+  error("free block fail.");
+  return -1;
 }

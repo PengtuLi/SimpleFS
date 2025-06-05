@@ -76,7 +76,8 @@ uint32_t indirect_pointer_num(uint32_t *pointers);
 bool init_bit_map(FileSystem *fs);
 void *free_block_of_inode(Disk *disk, Inode *inode, bool *block_map);
 bool busy_block_of_disk(FileSystem *fs, bool *block_map);
-
+uint32_t assign_block(FileSystem *fs);
+uint32_t unassign_block(FileSystem *fs, uint32_t bid);
 #endif
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

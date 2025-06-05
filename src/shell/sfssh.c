@@ -266,6 +266,7 @@ bool copyout(FileSystem *fs, size_t inode_number, const char *path) {
   char buffer[4 * BUFSIZ] = {0};
   size_t offset = 0;
   while (true) {
+    // read many times, each read a 4k page(BUFSIZE*4 = 4k)
     ssize_t result = fs_read(fs, inode_number, buffer, sizeof(buffer), offset);
     if (result <= 0) {
       break;

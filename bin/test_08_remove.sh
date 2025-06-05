@@ -64,7 +64,7 @@ SuperBlock:
 Inode 2:
     size: 0 bytes
     direct blocks:
-25 disk block reads
+21 disk block reads
 8 disk block writes
 EOF
 }
@@ -159,8 +159,8 @@ Inode 1:
 Inode 2:
     size: 965 bytes
     direct blocks: 4
-27 disk block reads
-10 disk block writes
+23 disk block reads
+13 disk block writes
 EOF
 }
 
@@ -227,15 +227,15 @@ SuperBlock:
 Inode 0:
     size: 27160 bytes
     direct blocks: 3 10 11 12 15
-    indirect block: 16
-    indirect data blocks: 17 18
+    indirect block: 17
+    indirect data blocks: 16 18
 Inode 2:
     size: 27160 bytes
     direct blocks: 4 5 6 7 8
     indirect block: 9
     indirect data blocks: 13 14
-41 disk block reads
-18 disk block writes
+48 disk block reads
+26 disk block writes
 EOF
 }
 

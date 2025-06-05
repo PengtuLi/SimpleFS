@@ -3,25 +3,15 @@
   "configurations": [
     {
       "name": "Launch sfssh",
-      "type": "lldb",
-      "request": "attach",
+      "type": "codelldb",
+      "request": "launch",
       "program": "${workspaceFolder}/bin/sfssh",
-      "args": ["./data/image.5", "5"],
+      "args": ["./data/image.20", "20"],
       "stopAtEntry": true,
       "cwd": "${workspaceFolder}",
       "environment": [],
-      "externalConsole": true,
-      "sourceMap": {},
-      "linux": {
-        "MIMode": "gdb",
-        "miDebuggerPath": "/usr/bin/gdb"
-      },
-      "osx": {
-        "MIMode": "gdb",
-        "miDebuggerPath": "/usr/bin/gdb"
-        // "MIMode": "lldb",
-        // "miDebuggerPath": ""
-      }
+      "console": "externalTerminal",
+      "sourceMap": {}
     },
     {
       "name": "test python",
